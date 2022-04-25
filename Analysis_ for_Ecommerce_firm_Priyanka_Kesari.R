@@ -48,9 +48,6 @@ length(unique(my_data_subset$Country)) # 38
 
 
 
-
-
-
 mean(is.na(my_data_subset)) # 3.1 % data has missing values so we can ignore it
 
 pMiss <- function(x){sum(is.na(x) / length(x)*100)}
@@ -121,7 +118,7 @@ my_data_subset_new$recent <- as.Date("2017-12-08") - as.Date(my_data_subset_new$
 # Remove the column returns to consider most recent purchase
 temp <- subset(my_data_subset_new, purchase.invoice == 1)
 
-#obtain no. of days of most recent purchase
+  #obtain no. of days of most recent purchase
 recent <- aggregate(recent ~ CustomerID, data = temp, FUN = min, na.rm=TRUE)
 remove(temp)
 
@@ -174,7 +171,7 @@ hist(Customers$Monetary_value)
 Customers$Monetary_value <- ifelse(Customers$Monetary_value < 0 , 0 , Customers$Monetary_value)
 hist(Customers$Monetary_value)
 
-#Test by Pareto principle
+#Data Testing Principle
 
 Customers <- Customers[order(-Customers$Monetary_value),]
 high.cutoff <- 0.8 * sum(Customers$Monetary_value)
@@ -244,8 +241,8 @@ models <- data.frame(k=integer(),
                      betweenss=numeric(),
                      totss=numeric(),
                      rssquared=numeric())
-for (k in 1:clustmax )
-{
+for (k in 1:clustmax )  
+  {
   print(k)
   
 
@@ -253,7 +250,7 @@ for (k in 1:clustmax )
 # iter the retun to use in final model
 output <- kmeans(data_preprocessing, centers = k, nstart = 20)
 
-# Add clusters to customers dataset
+  # Add clusters to customers dataset
 var.name <- paste("clusters",k,sep = "_")
 Customers[,(var.name)] <- output$cluster
 Customers[,(var.name)] <- factor(Customers[,(var.name)], levels= c(1:k))
@@ -272,6 +269,10 @@ print(graph_clusters)
 
 # Lets check clusters in original metrics
 library(dplyr)
+
+library(plyr)
+library(reshape2)
+
 print(title)
 center_clusters <- ddply(Customers, .(Customers[,(var.name)]),summarize,
                          Monetary_value = round(median(Monetary_value),2),
@@ -293,10 +294,11 @@ assign("models", models, envir = .GlobalEnv)
 remove(output, var.name, graph_clusters,center_clusters, title, colors)
 }
 
-remove(k)
+any(is.na(models))
+models = models[-which(is.na(models))]
 
 # Variance graph
-r_graph <- ggplot(models, aes(x = k, y = rsquared))
+r_graph <- ggplot(models, aes(x = k, y = rsquared, group = 1)) 
 r_graph <- r_graph + geom_point() + geom_line()
 r_graph <- r_graph + scale_y_continuous(labels = scales::percent)
 r_graph <- r_graph + scale_x_continuous(breaks = 1:clustmax)
@@ -327,15 +329,14 @@ barplot(table(nc$Best.n[1,]),xlab="No. of Clusters",ylab= "No. of Criteria ",mai
 
 # Hierrachical Clustering
 my_data2 <- read.csv("Ecommerce.csv",header = T)
-my_data2_subset <- subset(my_data2, select = -X)
-View(my_data2_subset)
-length(unique(my_data2_subset$CustomerID))
-sum(is.na(my_data2_subset$CustomerID))
+# Data Cleaning
+my_data2 <- na.omit(my_data2)
+my_data2 <- my_data2[!apply(is.na(my_data2[,-1]), 1, all),]
+ncol(m)y_data2
+cluster_h <- as.data.frame.matrix(my_data2)
+cluster_h <- t(cluster_h)
 
-mean(is.na(my_data2_subset))
-is.na(my_data2_subset) # ommited null values
-
-H_clustering <- dist(my_data2_subset, method ="euclidian")
+H_clustering <- dist(my_data2_subset, method ="euclidean")
 fit <- H_clustering(my_data2_subset, method = "ward")
 ?H_clustering
 
